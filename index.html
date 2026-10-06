@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Live demo: instant WhatsApp replies, bookings, reminders and Google review requests for local businesses.">
+<script src="config.js"></script>
 <title>Business Autopilot Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -99,6 +100,29 @@ input,select,textarea{font:15px var(--f-body);padding:9px 10px;border:1px solid 
 textarea{min-height:120px;resize:vertical}
 .out{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .foot{margin-top:28px;color:var(--muted);font-size:13px}
+.btn.big{font-size:17px;padding:13px 22px;border-radius:12px}
+.how{margin-top:24px;display:grid;gap:16px}
+.how h2{margin:0}
+.steps4{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.steps4 li{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--bg)}
+.steps4 .n{font:500 12px var(--f-mono);color:var(--brand);letter-spacing:.06em;text-transform:uppercase}
+.steps4 b{display:block;font:700 17px/1.3 var(--f-display);margin:4px 0}
+.steps4 p{margin:0;color:var(--muted);font-size:14px}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.plan{border:1px solid var(--line);border-radius:12px;padding:14px}
+.plan.best{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand) inset}
+.plan .price{font:700 24px var(--f-display);font-variant-numeric:tabular-nums}
+.plan .price small{font:500 13px var(--f-body);color:var(--muted)}
+.plan ul{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:14px}
+.faq details{border-top:1px solid var(--line);padding:10px 0}
+.faq summary{cursor:pointer;font-weight:700}
+.faq p{margin:6px 0 0;color:var(--muted)}
+.lead{display:grid;gap:10px;margin-top:12px}
+.lead label{color:var(--brand-ink);opacity:.92}
+.lead input,.lead select,.lead textarea{background:rgba(255,255,255,.95);color:#14211d;border:0}
+.lead .ok{font-weight:700}
+[hidden]{display:none!important}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 </style>
 
 </head>
@@ -134,18 +158,40 @@ textarea{min-height:120px;resize:vertical}
         <p class="small" style="margin:10px 0 0">A Google Sheet you can open on your phone. No new app to learn.</p>
       </section>
 
-      <section class="card cta" aria-labelledby="h-cta">
+      <section class="card cta" id="interested" aria-labelledby="h-cta">
         <h2 id="h-cta">Want this for <span id="ctaName">your business</span>?</h2>
-        <p>Setup takes 2–3 days. You approve every message before it goes live. Try it free for 7 days.</p>
-        <div id="ctaNumber" hidden>
-          <div class="small">Message Omkar on WhatsApp</div>
+        <p>Everything happens online: a 10-minute video call, then you're live in 48 hours. You approve every message first. Free 7-day trial.</p>
+        <button class="btn solid big" id="intBtn" type="button">I'm interested</button>
+        <form class="lead" id="leadForm" hidden novalidate>
+          <label for="lName">Your name
+            <input id="lName" autocomplete="name" maxlength="60" placeholder="e.g. Priya">
+          </label>
+          <label for="lPhone">Your WhatsApp number
+            <input id="lPhone" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="98XXXXXXXX">
+          </label>
+          <label for="lTime">Best time for a 10-minute call
+            <select id="lTime">
+              <option>Afternoon (1–4 PM)</option>
+              <option>Evening (7–9 PM)</option>
+              <option>Morning (10 AM–12 PM)</option>
+              <option>Message me on WhatsApp instead</option>
+            </select>
+          </label>
+          <label class="hp" for="lWeb">Leave this empty<input id="lWeb" tabindex="-1" autocomplete="off"></label>
+          <div class="row">
+            <button class="btn solid" id="lSend" type="submit">Send</button>
+            <span class="small" id="lMsg" role="status"></span>
+          </div>
+          <p class="small" style="margin:0">Your details go only to Omkar, to arrange the call.</p>
+        </form>
+        <div id="ctaNumber" hidden style="margin-top:14px">
+          <div class="small">Or message Omkar on WhatsApp</div>
           <div class="row" style="margin-top:4px">
             <span class="num" id="numText"></span>
             <button class="btn solid" id="copyNum" type="button">Copy number</button>
             <a class="btn" id="waLink" href="#" target="_blank" rel="noopener">Open WhatsApp</a>
           </div>
         </div>
-        <p class="small" id="ctaFallback" style="margin:0">Reply to the person who sent you this link.</p>
       </section>
     </div>
 
@@ -158,6 +204,31 @@ textarea{min-height:120px;resize:vertical}
       <div class="chips" id="chips"></div>
     </section>
   </div>
+
+  <section class="card how" id="how" aria-labelledby="h-how">
+    <h2 id="h-how">How it works (100% online)</h2>
+    <ol class="steps4">
+      <li><span class="n">Step 1</span><b>Try the demo</b><p>Tap the buttons in the chat above like a customer. That's exactly what your customers will see.</p></li>
+      <li><span class="n">Step 2</span><b>10-minute video call</b><p>Google Meet or WhatsApp video. I show it working on your own WhatsApp and note your prices and timings.</p></li>
+      <li><span class="n">Step 3</span><b>Free 7-day trial</b><p>I set it up remotely. You approve every message before it goes live. No new app, same number.</p></li>
+      <li><span class="n">Step 4</span><b>Keep it, pay by UPI</b><p>Happy after 7 days? Pay by UPI and it keeps running. Not happy? You pay nothing.</p></li>
+    </ol>
+    <div class="plans">
+      <div class="plan"><b>Starter</b><div class="price">₹2,999 <small>one-time</small></div>
+        <ul><li>Instant WhatsApp replies, day and night</li><li>Prices, timings, location answered</li><li>Every enquiry saved to your sheet</li></ul></div>
+      <div class="plan best"><b>Growth</b> <span class="pill">Most popular</span><div class="price">₹6,999 <small>one-time</small></div>
+        <ul><li>Everything in Starter</li><li>Bookings with automatic reminders</li><li>Google review requests after each visit</li><li>Win-back messages to old customers</li></ul></div>
+      <div class="plan"><b>Care plan</b><div class="price">₹699 <small>/ month, optional</small></div>
+        <ul><li>Monitoring and fixes</li><li>Message and price changes anytime</li><li>Monthly summary of enquiries and bookings</li></ul></div>
+    </div>
+    <div class="faq">
+      <details><summary>Do I need a new number or app?</summary><p>No. It runs on your WhatsApp Business number. Your customers don't install anything.</p></details>
+      <details><summary>Can I still reply myself?</summary><p>Yes. You can jump into any chat anytime. The assistant handles the routine questions so you don't have to.</p></details>
+      <details><summary>What if it says something wrong?</summary><p>It only uses the prices and facts you approve. Anything it doesn't know goes to you as a callback request.</p></details>
+      <details><summary>Can I stop anytime?</summary><p>Yes. The setup is one-time and the care plan is month to month. Cancel with one message.</p></details>
+    </div>
+    <div><a class="btn" href="#interested" style="color:var(--brand)">I'm interested →</a></div>
+  </section>
 
   <section class="card builder" id="builder" hidden aria-labelledby="h-build">
     <h2 id="h-build">Make a personal demo link</h2>
@@ -275,11 +346,11 @@ function applyIdentity(){
   $("avatar").textContent=NAME.trim().charAt(0).toUpperCase();
   $("eyebrow").textContent=P.name?"Live demo · made for "+NAME:"Live demo · sample "+T.label;
   if(P.num&&P.num.length>=10){
-    $("ctaNumber").hidden=false; $("ctaFallback").hidden=true;
+    $("ctaNumber").hidden=false;
     $("numText").textContent="+"+P.num.replace(/^(\d{2})(\d{5})(\d+)$/,"$1 $2 $3");
     const txt=encodeURIComponent("Hi Omkar, I saw the demo for "+NAME+". I'd like to know more.");
     $("waLink").href="https://wa.me/"+P.num+"?text="+txt;
-  }else{$("ctaNumber").hidden=true;$("ctaFallback").hidden=false}
+  }else{$("ctaNumber").hidden=true}
   $("builder").hidden=!P.builder;
   document.title="Business Autopilot Demo";
 }
@@ -367,6 +438,35 @@ $("reset").addEventListener("click",()=>{playing=false;timers.forEach(clearTimeo
 // --- copy helper
 async function copy(text,el,msg){try{await navigator.clipboard.writeText(text);$("copied").textContent=msg}catch(e){el.select&&el.select();$("copied").textContent="Selected – press copy on your keyboard"}}
 $("copyNum").addEventListener("click",async()=>{try{await navigator.clipboard.writeText("+"+P.num);$("copyNum").textContent="Copied"}catch(e){const r=document.createRange();r.selectNodeContents($("numText"));const s=getSelection();s.removeAllRanges();s.addRange(r)}});
+
+
+// --- "I'm interested": sends a lead to Omkar (his server -> Telegram). Falls back to WhatsApp.
+const LEAD_ENDPOINT=(window.AP_CONFIG&&window.AP_CONFIG.leadEndpoint)||"";
+function waFallback(extra){
+  if(!(P.num&&P.num.length>=10)) return false;
+  const txt="Hi Omkar, I'm interested in the WhatsApp assistant for "+NAME+"."+(extra?" "+extra:"");
+  location.href="https://wa.me/"+P.num+"?text="+encodeURIComponent(txt); return true;
+}
+$("intBtn").addEventListener("click",()=>{
+  if(!LEAD_ENDPOINT){ if(!waFallback()) { $("leadForm").hidden=false; $("lMsg").textContent="Reply to the WhatsApp message you got from Omkar."; } return; }
+  $("leadForm").hidden=false; $("intBtn").hidden=true; $("lName").focus();
+});
+$("leadForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const phone=$("lPhone").value.replace(/[^0-9+]/g,"");
+  if(phone.replace(/\D/g,"").length<10){ $("lMsg").textContent="Please add a 10-digit WhatsApp number."; $("lPhone").focus(); return; }
+  $("lSend").disabled=true; $("lMsg").textContent="Sending…";
+  const body={business:NAME,type:P.type||"salon",slug:(decodeURIComponent((location.hash||"").slice(1)).split(".")[0]||""),
+    name:$("lName").value.trim(),phone,best_time:$("lTime").value,hp:$("lWeb").value};
+  try{
+    const r=await fetch(LEAD_ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(body)});
+    if(!r.ok) throw new Error(r.status);
+    $("leadForm").innerHTML='<p class="ok">Thank you! Omkar will WhatsApp you within a few hours to fix the call.</p>';
+  }catch(err){
+    $("lSend").disabled=false;
+    if(!waFallback("My number: "+phone+", best time: "+$("lTime").value)) $("lMsg").textContent="Couldn't send. Please reply to Omkar's WhatsApp message instead.";
+  }
+});
 
 // --- builder
 function slug(s){return s.trim().replace(/&/g,"~").replace(/[^A-Za-z0-9~]+/g,"-").replace(/^-+|-+$/g,"")}
