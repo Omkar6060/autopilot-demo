@@ -89,6 +89,15 @@ tr.new td{background:var(--hl)}
 .btn.solid{background:var(--brand-ink);color:var(--brand);border-color:var(--brand-ink)}
 .small{font-size:13px;color:var(--muted)}
 .cta .small{color:var(--brand-ink);opacity:.85}
+.qrpromo{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 20px;padding:14px 16px;border-radius:14px;
+  background:var(--hl);border:2px solid var(--star,#f2b01e);color:var(--ink);text-decoration:none}
+.qrpromo:hover{filter:brightness(1.03)}
+.qrpromo .ico{flex:none;width:44px;height:44px;border-radius:10px;background:var(--ink);display:grid;place-items:center}
+.qrpromo .ico svg{width:28px;height:28px}
+.qrpromo .txt{flex:1 1 220px;min-width:0}
+.qrpromo .txt b{display:block;font:700 18px/1.25 var(--f-display)}
+.qrpromo .txt span{font-size:14px;color:var(--muted)}
+.qrpromo .go{flex:none;font:700 15px var(--f-body);background:var(--brand);color:var(--brand-ink);padding:10px 16px;border-radius:10px}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap}
 .toolbar .btn{color:var(--brand)}
 
@@ -139,6 +148,12 @@ textarea{min-height:120px;resize:vertical}
       <button class="btn" id="reset" type="button">Start again</button>
     </div>
   </header>
+
+  <a class="qrpromo" href="review-poster/" aria-label="Free tool: make a Google review QR poster">
+    <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><g fill="var(--bg)"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="3" height="3"/><rect x="19" y="14" width="3" height="3"/><rect x="14" y="19" width="3" height="3"/><rect x="19" y="19" width="3" height="3"/></g><g fill="var(--ink)"><rect x="4.5" y="4.5" width="3" height="3"/><rect x="16.5" y="4.5" width="3" height="3"/><rect x="4.5" y="16.5" width="3" height="3"/></g></svg></span>
+    <span class="txt"><b>🎁 Free: make a Google Review QR poster</b><span>Print-ready poster + WhatsApp status with your business name. 30 seconds, no sign-up.</span></span>
+    <span class="go">Make my poster →</span>
+  </a>
 
   <div class="grid">
     <div class="side">
