@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Live demo: instant WhatsApp replies, bookings, reminders and Google review requests for local businesses.">
+<title>Business Autopilot Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a working chat on the right (first on phones), a plain explainer and the owner's live sheet beside it. */
+:root{
+  --bg:#eef2f0; --panel:#ffffff; --ink:#14211d; --muted:#5b6b66; --line:#d7e0dc;
+  --chat:#e7ece6; --in:#ffffff; --out:#d8f3dc; --brand:#0f5c4d; --brand-ink:#ffffff;
+  --chip:#ffffff; --chip-ink:#0f5c4d; --ok:#1f8a5b; --stamp:#7a8a85; --hl:#fff3c4;
+  --f-display:"Familjen Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1715; --panel:#16211e; --ink:#e6eeeb; --muted:#9db0aa; --line:#27362f;
+  --chat:#0c1311; --in:#1c2925; --out:#1d4a3d; --brand:#3fb68f; --brand-ink:#06201a;
+  --chip:#1c2925; --chip-ink:#7fdcbc; --ok:#4fd19a; --stamp:#7f938d; --hl:#3a3418; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1715; --panel:#16211e; --ink:#e6eeeb; --muted:#9db0aa; --line:#27362f;
+  --chat:#0c1311; --in:#1c2925; --out:#1d4a3d; --brand:#3fb68f; --brand-ink:#06201a;
+  --chip:#1c2925; --chip-ink:#7fdcbc; --ok:#4fd19a; --stamp:#7f938d; --hl:#3a3418; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f-body);margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:24px 48px}
+.top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px;margin-bottom:20px}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font:700 clamp(26px,4vw,38px)/1.1 var(--f-display);margin:6px 0 0;text-wrap:balance;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--brand)}
+.lede{color:var(--muted);max-width:60ch;margin:8px 0 0}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:24px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}.phone{order:-1}}
+
+/* chat */
+.phone{background:var(--panel);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 12px 40px -18px rgba(10,40,30,.35);display:flex;flex-direction:column;height:min(680px,82vh);min-height:480px}
+.bar{background:var(--brand);color:var(--brand-ink);display:flex;align-items:center;gap:10px;padding:12px 14px}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--brand-ink);color:var(--brand);display:grid;place-items:center;font:700 16px var(--f-display);flex:none}
+.bar b{font:600 16px/1.2 var(--f-display);display:block}
+.bar small{opacity:.85;font-size:12px}
+.feed{flex:1;overflow-y:auto;background:var(--chat);padding:14px 12px;display:flex;flex-direction:column;gap:6px;scroll-behavior:smooth}
+.msg{max-width:84%;padding:8px 11px 6px;border-radius:12px;font-size:15px;line-height:1.4;white-space:pre-line;box-shadow:0 1px 0 rgba(0,0,0,.06);animation:pop .22s ease-out}
+.msg.in{align-self:flex-start;background:var(--in);border-top-left-radius:4px}
+.msg.out{align-self:flex-end;background:var(--out);border-top-right-radius:4px}
+.msg .t{display:block;text-align:right;font:500 10.5px var(--f-mono);color:var(--stamp);margin-top:2px}
+.msg .auto{font:500 10.5px var(--f-mono);color:var(--ok);letter-spacing:.04em;text-transform:uppercase;display:block;margin-bottom:2px}
+.divider{align-self:center;background:var(--panel);color:var(--muted);font:500 11px var(--f-mono);padding:4px 10px;border-radius:8px;margin:8px 0;text-transform:uppercase;letter-spacing:.06em}
+.typing{align-self:flex-start;background:var(--in);border-radius:12px;padding:10px 12px;display:flex;gap:4px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--stamp);animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;background:var(--panel);border-top:1px solid var(--line);min-height:58px;align-items:center}
+.chip{font:600 14px var(--f-body);border:1.5px solid var(--chip-ink);color:var(--chip-ink);background:var(--chip);border-radius:999px;padding:7px 14px;cursor:pointer}
+.chip:hover{background:var(--hl)}
+.chip:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.chips .hint{color:var(--muted);font-size:13px}
+@keyframes pop{from{transform:translateY(6px);opacity:.3}to{transform:none;opacity:1}}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.msg{animation:none}.typing i{animation:none}.feed{scroll-behavior:auto}}
+
+/* explainer */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font:700 19px/1.25 var(--f-display);margin:0 0 10px}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.steps li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:start;color:var(--muted);transition:color .3s}
+.steps li .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font:700 13px var(--f-mono);color:var(--muted)}
+.steps li b{color:var(--ink);font-weight:700}
+.steps li.done{color:var(--ink)}
+.steps li.done .dot{background:var(--ok);border-color:var(--ok);color:var(--brand-ink)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+tr.new td{background:var(--hl)}
+.pill{display:inline-block;font:600 12px var(--f-body);padding:2px 8px;border-radius:999px;background:var(--out);color:var(--ink)}
+.empty td{color:var(--muted);font-style:italic}
+.cta{background:var(--brand);color:var(--brand-ink);border:0}
+.cta h2{color:var(--brand-ink)}
+.cta p{margin:0 0 12px}
+.num{font:600 20px var(--f-mono);letter-spacing:.02em;user-select:all}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:700 14px var(--f-body);border-radius:10px;padding:9px 14px;border:1.5px solid currentColor;background:transparent;color:inherit;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.solid{background:var(--brand-ink);color:var(--brand);border-color:var(--brand-ink)}
+.small{font-size:13px;color:var(--muted)}
+.cta .small{color:var(--brand-ink);opacity:.85}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.toolbar .btn{color:var(--brand)}
+
+/* builder */
+.builder{margin-top:24px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:700}
+input,select,textarea{font:15px var(--f-body);padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+textarea{min-height:120px;resize:vertical}
+.out{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.foot{margin-top:28px;color:var(--muted);font-size:13px}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="eyebrow">Live demo · made for your business</div>
+      <h1 id="headline">See how <em id="hName">Glow Studio</em> replies to every customer, even at midnight</h1>
+      <p class="lede" id="lede">Tap the buttons in the chat as if you were a customer. Everything marked <b>Automatic</b> happens by itself on your existing WhatsApp Business number.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="play" type="button">Play the whole demo</button>
+      <button class="btn" id="reset" type="button">Start again</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="side">
+      <section class="card" aria-labelledby="h-steps">
+        <h2 id="h-steps">What runs automatically</h2>
+        <ol class="steps" id="steps"></ol>
+      </section>
+
+      <section class="card" aria-labelledby="h-sheet">
+        <h2 id="h-sheet">Your bookings sheet, filled in for you</h2>
+        <div class="tablewrap">
+          <table>
+            <thead><tr id="sheetHead"></tr></thead>
+            <tbody id="sheetBody"><tr class="empty"><td colspan="5">Bookings appear here when a customer books in the chat.</td></tr></tbody>
+          </table>
+        </div>
+        <p class="small" style="margin:10px 0 0">A Google Sheet you can open on your phone. No new app to learn.</p>
+      </section>
+
+      <section class="card cta" aria-labelledby="h-cta">
+        <h2 id="h-cta">Want this for <span id="ctaName">your business</span>?</h2>
+        <p>Setup takes 2–3 days. You approve every message before it goes live. Try it free for 7 days.</p>
+        <div id="ctaNumber" hidden>
+          <div class="small">Message Omkar on WhatsApp</div>
+          <div class="row" style="margin-top:4px">
+            <span class="num" id="numText"></span>
+            <button class="btn solid" id="copyNum" type="button">Copy number</button>
+            <a class="btn" id="waLink" href="#" target="_blank" rel="noopener">Open WhatsApp</a>
+          </div>
+        </div>
+        <p class="small" id="ctaFallback" style="margin:0">Reply to the person who sent you this link.</p>
+      </section>
+    </div>
+
+    <section class="phone" aria-label="Customer chat demo">
+      <div class="bar">
+        <div class="avatar" id="avatar">G</div>
+        <div><b id="barName">Glow Studio</b><small id="barSub">Business account · replies instantly</small></div>
+      </div>
+      <div class="feed" id="feed" aria-live="polite"></div>
+      <div class="chips" id="chips"></div>
+    </section>
+  </div>
+
+  <section class="card builder" id="builder" hidden aria-labelledby="h-build">
+    <h2 id="h-build">Make a personal demo link</h2>
+    <p class="small" style="margin-top:-4px">Only you see this panel (it opens when the link ends with <code>#builder</code>). Your link and number are remembered in this browser.</p>
+    <div class="fields">
+      <label for="bLink">Your demo link (paste once)
+        <input id="bLink" placeholder="https://claude.ai/…">
+      </label>
+      <label for="bNum">Your WhatsApp number (with 91)
+        <input id="bNum" inputmode="numeric" placeholder="919876543210">
+      </label>
+      <label for="bName">Business name
+        <input id="bName" placeholder="Glacia Ladies Salon">
+      </label>
+      <label for="bType">Business type
+        <select id="bType">
+          <option value="salon">Salon / spa</option>
+          <option value="gym">Gym / fitness</option>
+          <option value="clinic">Clinic</option>
+          <option value="coaching">Coaching class</option>
+        </select>
+      </label>
+    </div>
+    <div class="out">
+      <label for="bOut">Personal link
+        <input id="bOut" readonly>
+      </label>
+      <label for="bMsg">Message to send with it
+        <textarea id="bMsg" readonly></textarea>
+      </label>
+      <div class="row">
+        <button class="btn" id="copyLink" type="button" style="color:var(--brand)">Copy link</button>
+        <button class="btn" id="copyMsg" type="button" style="color:var(--brand)">Copy message</button>
+        <a class="btn" id="previewLink" href="#" style="color:var(--brand)">Preview this demo</a>
+        <span class="small" id="copied" role="status"></span>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">Demo with sample prices and a sample customer. Built by Omkar · Business Autopilot, Navi Mumbai.</p>
+</div>
+
+<script>
+(function(){
+const TYPES={
+ salon:{label:"salon",def:"Glow Studio",cust:"Riya",
+  first:"Hi, do you have a slot tomorrow for a haircut?",
+  menu:["Services & prices","Book appointment","Timings & location"],
+  prices:"Haircut (women) ₹500\nHaircut (men) ₹250\nHair spa ₹1,200\nFacial ₹900\nThreading ₹60",
+  services:["Haircut","Hair spa","Facial"],
+  slots:["Tomorrow 11:00 AM","Tomorrow 1:30 PM","Tomorrow 5:00 PM"],
+  timings:"Open 10 AM – 9 PM, all days.\nGround floor, near the station.",
+  noun:"appointment",after:"Thanks for visiting today, Riya! How was your haircut?",
+  winback:"Hi Riya, it's been a month since your last visit ✂️ Book this week and get 10% off any hair service.",
+  win:"30 days later"},
+ gym:{label:"gym",def:"Iron Fit Gym",cust:"Arjun",
+  first:"Hi, what are your membership fees? Can I try first?",
+  menu:["Plans & fees","Book free trial","Timings & location"],
+  prices:"Monthly ₹1,500\nQuarterly ₹4,000\nYearly ₹12,000\nPersonal training from ₹5,000/month",
+  services:["Free trial session","Personal training intro","Cardio + weights"],
+  slots:["Tomorrow 6:30 AM","Tomorrow 7:00 PM","Saturday 9:00 AM"],
+  timings:"Open 5:30 AM – 11 PM, Monday to Saturday.\nFirst floor, opposite the market.",
+  noun:"trial session",after:"Great workout today, Arjun! How was your trial session?",
+  winback:"Hi Arjun, we haven't seen you for 10 days 💪 Your spot is waiting. Come back this week and get a free diet consultation.",
+  win:"10 days without a visit"},
+ clinic:{label:"clinic",def:"Smile Care Dental Clinic",cust:"Mr. Shah",
+  first:"Hello, I have tooth pain. Can I get an appointment tomorrow?",
+  menu:["Treatments & fees","Book appointment","Timings & location"],
+  prices:"Consultation ₹500\nCleaning ₹1,200\nFilling from ₹1,500\nRoot canal from ₹6,000",
+  services:["Consultation","Cleaning","Follow-up visit"],
+  slots:["Tomorrow 10:30 AM","Tomorrow 5:00 PM","Tomorrow 7:30 PM"],
+  timings:"Open 10 AM – 1 PM and 5 – 9 PM, Monday to Saturday.\nShop 4, near the main signal.",
+  noun:"appointment",after:"Thank you for visiting today, Mr. Shah. How was your experience with the doctor?",
+  winback:"Hello Mr. Shah, it's time for your 6-month check-up and cleaning 🦷 Reply BOOK to pick a slot.",
+  win:"6 months later"},
+ coaching:{label:"coaching class",def:"Bright Minds Classes",cust:"Mrs. Patil",
+  first:"Hello, what are the fees for 10th standard? Which batches are open?",
+  menu:["Courses & fees","Book a demo class","Timings & location"],
+  prices:"8th–10th (all subjects) ₹2,500/month\nScience + Maths only ₹1,800/month\nCrash course (Feb) ₹6,000",
+  services:["10th demo class","9th demo class","Maths demo class"],
+  slots:["Monday 5:00 PM","Wednesday 5:00 PM","Saturday 11:00 AM"],
+  timings:"Batches 4 – 8 PM weekdays, 10 AM – 1 PM Saturday.\nSecond floor, above the bank.",
+  noun:"demo class",after:"Thank you for attending the demo class today! How did your child find it?",
+  winback:"Hello Mrs. Patil, the fee for November is due on 5th. Pay by UPI to the class number. Test results for this week: Maths 42/50 ✅",
+  win:"Next month"}
+};
+const STEPS=[
+ ["Instant reply, any time","Customers get an answer in seconds, even after closing."],
+ ["Prices and info answered","The common questions answer themselves."],
+ ["Booking saved to your sheet","Name, service and time are written down for you."],
+ ["Reminder before the visit","Fewer no-shows and forgotten slots."],
+ ["Google review request","Happy customers are sent straight to your review page."],
+ ["Win-back message","Customers who stop coming get a friendly nudge."]
+];
+
+const $=id=>document.getElementById(id);
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+// --- read the personal link: #Business-Name.type.919876543210
+function parseHash(){
+  const h=decodeURIComponent((location.hash||"").slice(1));
+  if(!h||h==="builder") return {builder:h==="builder"};
+  const [n,t,num]=h.split(".");
+  return {name:(n||"").replace(/~/g,"&").replace(/-/g," ").trim(),type:TYPES[t]?t:"salon",num:(num||"").replace(/\D/g,"")};
+}
+let P=parseHash();
+let T=TYPES[P.type||"salon"];
+let NAME=P.name||T.def;
+let busy=false, stepDone=new Set(), booked=null, playing=false, timers=[];
+
+function applyIdentity(){
+  T=TYPES[P.type||"salon"]; NAME=P.name||T.def;
+  $("hName").textContent=NAME; $("barName").textContent=NAME; $("ctaName").textContent=P.name?NAME:"your "+T.label;
+  $("avatar").textContent=NAME.trim().charAt(0).toUpperCase();
+  $("eyebrow").textContent=P.name?"Live demo · made for "+NAME:"Live demo · sample "+T.label;
+  if(P.num&&P.num.length>=10){
+    $("ctaNumber").hidden=false; $("ctaFallback").hidden=true;
+    $("numText").textContent="+"+P.num.replace(/^(\d{2})(\d{5})(\d+)$/,"$1 $2 $3");
+    const txt=encodeURIComponent("Hi Omkar, I saw the demo for "+NAME+". I'd like to know more.");
+    $("waLink").href="https://wa.me/"+P.num+"?text="+txt;
+  }else{$("ctaNumber").hidden=true;$("ctaFallback").hidden=false}
+  $("builder").hidden=!P.builder;
+  document.title="Business Autopilot Demo";
+}
+
+function renderSteps(){
+  $("steps").innerHTML=STEPS.map((s,i)=>`<li class="${stepDone.has(i)?"done":""}"><span class="dot">${stepDone.has(i)?"✓":i+1}</span><span><b>${s[0]}</b><br>${s[1]}</span></li>`).join("");
+}
+function done(i){stepDone.add(i);renderSteps()}
+function renderSheet(){
+  $("sheetHead").innerHTML="<th>Customer</th><th>"+(T.label==="coaching class"?"Class":"Service")+"</th><th>When</th><th>Status</th>";
+  if(!booked){$("sheetBody").innerHTML='<tr class="empty"><td colspan="4">Bookings appear here when a customer books in the chat.</td></tr>';return}
+  const rows=[["Priya M.",T.services[1],"Today 4:00 PM","Visited"],[T.cust,booked.svc,booked.slot,booked.status]];
+  $("sheetBody").innerHTML=rows.map((r,i)=>`<tr class="${i===1?"new":""}"><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td><span class="pill">${r[3]}</span></td></tr>`).join("");
+}
+
+const feed=()=>$("feed");
+function scroll(){const f=feed();f.scrollTop=f.scrollHeight}
+function add(html,cls){const d=document.createElement("div");d.className=cls;d.innerHTML=html;feed().appendChild(d);scroll();return d}
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"})[c])}
+function customer(text,time){add(esc(text)+`<span class="t">${time} ✓✓</span>`,"msg out")}
+function divider(text){add(esc(text),"divider")}
+function wait(ms){return new Promise(r=>{const id=setTimeout(r,reduce?0:ms);timers.push(id)})}
+async function bot(text,time,auto=true){
+  const ty=add("<i></i><i></i><i></i>","typing");
+  await wait(650); ty.remove();
+  add((auto?'<span class="auto">Automatic</span>':"")+esc(text)+`<span class="t">${time}</span>`,"msg in");
+}
+function chips(list,hint){
+  const c=$("chips"); c.innerHTML="";
+  if(hint){const s=document.createElement("span");s.className="hint";s.textContent=hint;c.appendChild(s)}
+  list.forEach(([label,fn])=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=label;
+    b.addEventListener("click",async()=>{if(busy)return;busy=true;c.innerHTML="";await fn(label);busy=false;if(playing)autoNext()});c.appendChild(b)});
+}
+
+// --- conversation
+async function opening(instant){
+  feed().innerHTML=""; stepDone=new Set(); booked=null; renderSteps(); renderSheet();
+  divider("Today · after closing time");
+  customer(T.first,"11:42 PM");
+  if(instant){
+    add('<span class="auto">Automatic</span>'+esc(`Hi! Thanks for messaging ${NAME} 😊 We're closed right now, but I can help you straight away.\nWhat would you like?`)+'<span class="t">11:42 PM</span>',"msg in");
+  }else await bot(`Hi! Thanks for messaging ${NAME} 😊 We're closed right now, but I can help you straight away.\nWhat would you like?`,"11:42 PM");
+  done(0); menu();
+}
+function menu(){
+  chips([[T.menu[0],showPrices],[T.menu[1],book],[T.menu[2],showTimings]],"Tap as the customer:");
+}
+async function showPrices(l){customer(l,"11:43 PM");await bot(T.prices+"\n\n(sample prices)","11:43 PM");done(1);
+  chips([[T.menu[1],book],[T.menu[2],showTimings]],"Next:")}
+async function showTimings(l){customer(l,"11:43 PM");await bot(T.timings,"11:43 PM");done(1);
+  chips([[T.menu[1],book],[T.menu[0],showPrices]],"Next:")}
+async function book(l){customer(l,"11:44 PM");await bot("Sure! Which one?","11:44 PM");
+  chips(T.services.map(s=>[s,pickSvc]),"Pick one:")}
+async function pickSvc(svc){customer(svc,"11:44 PM");await bot("These slots are free:","11:44 PM");
+  chips(T.slots.map(s=>[s,sl=>confirm(svc,sl)]),"Pick a time:")}
+async function confirm(svc,slot){customer(slot,"11:45 PM");
+  await bot(`Booked ✅\n${svc}, ${slot}\nName: ${T.cust}\n\nWe'll remind you before your ${T.noun}. Reply C to cancel.`,"11:45 PM");
+  booked={svc,slot,status:"Booked"}; renderSheet(); done(2);
+  chips([["Skip to the next day ⏩",()=>reminder(svc,slot)]],"See what happens next:")}
+async function reminder(svc,slot){divider(slot.split(" ")[0]+" · 2 hours before");
+  await bot(`Hi ${T.cust}, a reminder of your ${T.noun} today at ${slot.replace(/^\S+\s/,"")} at ${NAME}. See you soon!\nReply 1 to confirm, 2 to reschedule.`,"9:00 AM");
+  done(3); chips([["1 (confirm)",async l=>{customer(l,"9:02 AM");await bot("Confirmed 👍 See you!","9:02 AM");booked.status="Confirmed";renderSheet();
+      chips([["Skip to after the visit ⏩",afterVisit]],"Next:")}]],"Reply as the customer:")}
+async function afterVisit(){divider("After the visit · 6:00 PM");
+  booked.status="Visited";renderSheet();
+  await bot(T.after+"\nTap a rating:","6:00 PM");
+  chips([["⭐⭐⭐⭐⭐",rate5],["⭐⭐⭐",rate3]],"Rate as the customer:")}
+async function rate5(l){customer(l,"6:05 PM");
+  await bot(`So happy to hear that! Could you share it on Google? It takes 20 seconds and really helps ${NAME}:\n👉 Leave a review (your Google link)`,"6:05 PM");
+  done(4);chips([["Skip ahead ⏩",winback]],"Next:")}
+async function rate3(l){customer(l,"6:05 PM");
+  await bot("Thank you for telling us. What could we do better? The owner will personally read your reply.","6:05 PM");
+  add('<span class="auto">Sent privately to the owner</span>'+esc(`⚠️ ${T.cust} rated 3 stars. Call back today.`)+'<span class="t">6:05 PM</span>',"msg in");
+  done(4);chips([["Skip ahead ⏩",winback]],"Low ratings go to you, not to Google. Next:")}
+async function winback(){divider(T.win);await bot(T.winback,"11:00 AM");done(5);
+  chips([["Start again",()=>opening(false)]],"That's the full demo 🎉")}
+
+// --- autoplay: clicks the first chip each time
+function autoNext(){const b=$("chips").querySelector(".chip");if(!b||/Start again/.test(b.textContent)){playing=false;$("play").textContent="Play the whole demo";return}
+  const id=setTimeout(()=>b.click(),reduce?300:1100);timers.push(id)}
+$("play").addEventListener("click",()=>{if(playing){playing=false;timers.forEach(clearTimeout);$("play").textContent="Play the whole demo";return}
+  playing=true;$("play").textContent="Pause";autoNext()});
+$("reset").addEventListener("click",()=>{playing=false;timers.forEach(clearTimeout);busy=false;$("play").textContent="Play the whole demo";opening(true)});
+
+// --- copy helper
+async function copy(text,el,msg){try{await navigator.clipboard.writeText(text);$("copied").textContent=msg}catch(e){el.select&&el.select();$("copied").textContent="Selected – press copy on your keyboard"}}
+$("copyNum").addEventListener("click",async()=>{try{await navigator.clipboard.writeText("+"+P.num);$("copyNum").textContent="Copied"}catch(e){const r=document.createRange();r.selectNodeContents($("numText"));const s=getSelection();s.removeAllRanges();s.addRange(r)}});
+
+// --- builder
+function slug(s){return s.trim().replace(/&/g,"~").replace(/[^A-Za-z0-9~]+/g,"-").replace(/^-+|-+$/g,"")}
+function build(){
+  const link=$("bLink").value.trim().replace(/#.*$/,""), num=$("bNum").value.replace(/\D/g,""), name=$("bName").value.trim(), type=$("bType").value;
+  store.set("ap_link",link);store.set("ap_num",num);
+  const hash=slug(name||TYPES[type].def)+"."+type+(num?"."+num:"");
+  const full=(link||"https://your-demo-link")+"#"+hash;
+  $("bOut").value=full; $("previewLink").href="#"+hash;
+  const who=name||"your business";
+  $("bMsg").value=`Hi! I'm Omkar from Navi Mumbai. I made a 1-minute demo showing how ${who} could reply to every WhatsApp enquiry instantly, send booking reminders and get more Google reviews – automatically.\n\nTry it here (tap the buttons like a customer):\n${full}\n\nIf you like it, I can set it up in 2–3 days. Free 7-day trial.`;
+}
+["bLink","bNum","bName","bType"].forEach(id=>$(id).addEventListener("input",build));
+$("copyLink").addEventListener("click",()=>copy($("bOut").value,$("bOut"),"Link copied"));
+$("copyMsg").addEventListener("click",()=>copy($("bMsg").value,$("bMsg"),"Message copied"));
+$("bLink").value=store.get("ap_link")||(/github\.io$/.test(location.hostname)?location.origin+location.pathname:""); $("bNum").value=store.get("ap_num")||"";
+
+window.addEventListener("hashchange",()=>{const keep=P.builder;P=parseHash();if(!P.builder&&keep&&location.hash.length>1){P.builder=true}
+  playing=false;timers.forEach(clearTimeout);busy=false;applyIdentity();opening(true)});
+
+applyIdentity(); build(); opening(true);
+})();
+</script>
+
+</body>
+</html>
